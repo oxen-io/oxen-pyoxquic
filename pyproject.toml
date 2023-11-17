@@ -1,0 +1,32 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.3.3",
+    "pybind11"
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pyoxquic"
+version = "0.0.1"
+description="Python wrapper for oxen-libquic quic-based communication library"
+readme = "README.md"
+authors = [
+  { name = "Jason Rhinlander", email = "jason@oxen.io" },
+]
+requires-python = ">=3.7"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.scikit-build]
+wheel.expand-macos-universal-tags = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = [
+  "error",
+  "ignore:(ast.Str|Attribute s|ast.NameConstant|ast.Num) is deprecated:DeprecationWarning:_pytest",  # Python 3.12
+]
+testpaths = ["tests"]
