@@ -7,8 +7,8 @@ Python wrapper for oxen-libquic quic-based communication library
 - python3-pip
 - python3-dev $\geq$ 3.7
 - pybind11-dev $\geq$ 2.10.3
-- scikit-build $\geq$ 0.13.0
-- libquic-dev
+- scikit-build-core $\geq$ 0.3.3
+- libquic
 
 
 ## Building from Source
@@ -24,6 +24,7 @@ cd oxen-pyoxquic
 
 A few CMake options have been exposed for granular configuration:
 - `FORCE_PYBIND11_SUBMODULE` -- Force downloading pybind11 as a submodule over finding a local install; defaults to OFF
+- `FORCE_LIBQUIC_SUBMODULE` -- Force downloading libquic as a submodule over finding a local install; defaults to OFF
 - `INSTALL_OXQUIC` -- Install as a python module upon successful compilation; defaults to OFF
 - `OXQUIC_WARN_ERRORS` -- Will treat all warnings as errors for development use; defaults to ON for debug builds (or if `-DCMAKE_COMPILE_WARNING_AS_ERROR` is passed), OFF otherwise
 

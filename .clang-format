@@ -6,6 +6,7 @@ AlignEscapedNewlines: Left
 AlignOperands: AlignAfterOperator
 AlignTrailingComments: 'true'
 AllowAllArgumentsOnNextLine: 'true'
+AllowAllParametersOfDeclarationOnNextLine: 'true'
 AllowShortBlocksOnASingleLine: 'false'
 AllowShortCaseLabelsOnASingleLine: 'false'
 AllowShortFunctionsOnASingleLine: Inline
@@ -48,7 +49,7 @@ SpacesInSquareBrackets: 'false'
 Standard: c++17
 UseTab: Never
 SortIncludes: true
-ColumnLimit: 125
+ColumnLimit: 100
 IndentWidth: 4
 AccessModifierOffset: -2
 ConstructorInitializerIndentWidth: 8
@@ -59,5 +60,5 @@ DerivePointerAlignment: false
 PointerAlignment: Left
 
 # when wrapping function calls/declarations, force each parameter to have its own line
-BinPackParameters: 'false'
-BinPackArguments: 'false'
+BinPackParameters: 'true'
+BinPackArguments: 'true'

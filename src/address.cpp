@@ -2,9 +2,9 @@
 
 namespace oxen::quic
 {
-    void test_function()
+    struct PyAddress : Address
     {
-        std::cout << "Test function succeeded!" << std::endl;
-    }
+        using Address::Address;
+    };
 
-}
+}  // namespace oxen::quic

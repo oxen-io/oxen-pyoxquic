@@ -20,6 +20,10 @@ test = ["pytest"]
 
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true
+cmake.minimum-version = "3.13"
+cmake.verbose = false
+cmake.args = ["-DINSTALL_OXQUIC=ON"]
+cmake.build-type = "Release"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
