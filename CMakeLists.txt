@@ -3,6 +3,7 @@ project(pyoxquic LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(FORCE_PYBIND11_SUBMODULE "Force downloading pybind11 as a submodule" OFF)
 option(FORCE_LIBQUIC_SUBMODULE "Force downloading libquic as as submodule" OFF)
