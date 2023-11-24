@@ -58,7 +58,7 @@ if (NOT FORCE_LIBQUIC_SUBMODULE)
         add_library(quic alias PkgConfig::LIBQUIC)
     else()
         message(STATUS "Could not find system libquic!")
-        set (FORCE_LIBQUIC_SUBMODULE ON)
+        set(FORCE_LIBQUIC_SUBMODULE ON)
     endif()
 endif()
 
@@ -66,14 +66,12 @@ endif()
 if (FORCE_LIBQUIC_SUBMODULE)
     message(STATUS "Using libquic submodule!")
 
-    set(LIBQUIC_WARN_DEPRECATED OFF CACHE BOOL "")
-    FetchContent_Declare(
-        libquic
-        GIT_REPOSITORY https://github.com/oxen-io/oxen-libquic.git
-        GIT_TAG dev
-    )
+    if (NOT EXISTS ${PROJECT_SOURCE_DIR}/oxen-libquic/CMakeLists.txt)
+        message(FATAL_ERROR "Couldn't find oxen-libquic submodule; perhaps you need to `git submodule update --init --recursive`?")
+    endif()
 
-    FetchContent_MakeAvailable(libquic)
+    set(LIBQUIC_WARN_DEPRECATED OFF CACHE BOOL "")
+    add_subdirectory(oxen-libquic)
 endif()
 
 python_add_library(oxquic

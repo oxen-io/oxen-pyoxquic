@@ -1,0 +1,3 @@
+[submodule "oxen-libquic"]
+	path = oxen-libquic
+	url = https://github.com/oxen-io/oxen-libquic.git
