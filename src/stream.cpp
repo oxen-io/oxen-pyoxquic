@@ -2,11 +2,11 @@
 
 namespace oxen::quic
 {
-    PYBIND11_MODULE(stream, m)
+    void pybind_stream(py::module_& m)
     {
-        py::class_<std::shared_ptr<void>>(m, "shared_ptr_void").def(py::init());
+        //py::class_<std::shared_ptr<void>>(m, "shared_ptr_void").def(py::init());
 
-        py::class_<message>(m, "message")
+        py::class_<message>(m, "Message")
                 .def(py::init<BTRequestStream&, std::string, bool>(), py::arg("bstream"),
                      py::arg("request"), py::arg("is_error") = false)
                 .def("respond", &message::respond, py::arg("body"), py::arg("is_error") = false)
@@ -59,6 +59,6 @@ namespace oxen::quic
                         py::arg("command"), py::arg("body"))
                 .def("register_command", &BTRequestStream::register_command, py::arg("endpoint"),
                      py::arg("hook"));
-    };
+    }
 
 }  // namespace oxen::quic

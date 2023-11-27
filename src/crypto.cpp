@@ -2,7 +2,8 @@
 
 namespace oxen::quic
 {
-    PYBIND11_MODULE(crypto, m){
-            //
-    };
-}
+    void pybind_crypto(py::module_& m)
+    {
+        //
+    }
+}  // namespace oxen::quic

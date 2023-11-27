@@ -2,10 +2,7 @@
 
 namespace oxen::quic
 {
-    PYBIND11_MODULE(connection, m)
-    {
-        py::class_<std::shared_ptr<void>>(m, "shared_ptr_void").def(py::init());
-
+    void pybind_connection(py::module_& m) {
         py::class_<ConnectionID>(m, "ConnectionID")
                 .def(py::init<>())
                 .def(py::init<const ConnectionID&>())
@@ -27,7 +24,7 @@ namespace oxen::quic
         py::class_<Connection, std::shared_ptr<Connection>>(m, "Connection")
                 .def(py::init(&Connection::make_conn))
                 .def_static("make_conn", &Connection::make_conn)
-                .def("close_connection", &Connection::close_connection, py::arg("error_code") = 0)
+                .def("close_connection", &Connection::close_connection, "error_code"_a = 0)
                 .def("scid", &Connection::scid)
                 .def("local", &Connection::local)
                 .def("remote", &Connection::remote)
@@ -41,10 +38,21 @@ namespace oxen::quic
                 .def(
                         "send_datagram",
                         [](Connection& self, bstring data) { self.send_datagram(std::move(data)); },
-                        py::arg("data"))
-                .def("get_new_stream_impl", &Connection::get_new_stream_impl)
-                .def("get_new_stream", &connection_interface::get_new_stream<BTRequestStream>)
-                .def("get_new_stream", &connection_interface::get_new_stream<Stream>);
+                        "data"_a)
+                .def("create_btreq_stream", [](Connection& self,
+                            std::function<void(Stream&, uint64_t)> close_callback) {
+                    return self.get_new_stream<BTRequestStream>(std::move(close_callback));
+                },
+                "on_close"_a = nullptr
+                )
+                .def("create_stream", [](Connection& self,
+                            stream_data_callback on_data,
+                            stream_close_callback on_close) {
+                    return self.get_new_stream(std::move(on_data), std::move(on_close));
+                },
+                "on_data"_a = nullptr,
+                "on_close"_a = nullptr)
+                ;
     };
 
 }  // namespace oxen::quic

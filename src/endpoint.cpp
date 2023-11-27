@@ -2,8 +2,13 @@
 
 namespace oxen::quic
 {
-    PYBIND11_MODULE(endpoint, m)
+    void pybind_endpoint(py::module_& m)
     {
-        // py::class_<Endpoint>(m, "Endpoint").def(py::init([]() {}));
-    }
+        py::class_<Endpoint>(m, "Endpoint")
+            .def_property_readonly("local_addr", &Endpoint::local)
+            // TODO:
+            //.def("connect",
+            // .def("listen" ...)
+            ;
+   }
 }  // namespace oxen::quic

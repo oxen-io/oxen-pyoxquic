@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pybind11/cast.h>
 #include <pybind11/functional.h>
 #include <pybind11/operators.h>
@@ -9,15 +11,21 @@
 
 namespace py = pybind11;
 
+using namespace py::literals;
+
 PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>);
 
 namespace oxen::quic
 {
+    using namespace pybind11;
+    using namespace pybind11::detail;
+
     template <typename StringT>
     struct pybytes_caster
     {
+        using Char = typename StringT::value_type;
         static_assert(
-                sizeof(StringT::value_type) == 1 && !std::is_same_v<StringT::value_type, char>,
+                sizeof(Char) == 1 && !std::is_same_v<Char, char>,
                 "pybytes_caster requires a 1-byte, non-char type");
 
       public:

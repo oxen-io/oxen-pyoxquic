@@ -74,8 +74,9 @@ if (FORCE_LIBQUIC_SUBMODULE)
     add_subdirectory(oxen-libquic)
 endif()
 
-python_add_library(oxquic
-    MODULE
+pybind11_add_module(oxquic
+    src/oxquic.cpp
+
     src/address.cpp
     src/connection.cpp
     src/crypto.cpp
@@ -85,6 +86,10 @@ python_add_library(oxquic
 )
 
 target_link_libraries(oxquic PRIVATE quic pybind11::headers)
+set_target_properties(oxquic PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION ON
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON)
 
 if (INSTALL_OXQUIC)
     install(TARGETS oxquic DESTINATION pyoxquic)

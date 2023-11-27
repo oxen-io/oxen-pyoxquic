@@ -2,9 +2,9 @@
 
 namespace oxen::quic
 {
-    struct PyAddress : Address
+    void pybind_address(py::module_& m)
     {
-        using Address::Address;
-    };
+        //
+    }
 
 }  // namespace oxen::quic
