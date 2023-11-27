@@ -75,7 +75,7 @@ if (FORCE_LIBQUIC_SUBMODULE)
 endif()
 
 pybind11_add_module(oxquic
-    src/oxquic.cpp
+    # src/oxquic.cpp
 
     src/address.cpp
     src/connection.cpp
