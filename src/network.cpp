@@ -5,7 +5,7 @@ namespace oxen::quic
 {
     void pybind_network(py::module_& m)
     {
-        py::class_<Network>(m, "Network")
+        py::class_<Network, std::shared_ptr<Network>>(m, "Network")
                 .def(py::init<>())
                 .def(
                         "endpoint",
