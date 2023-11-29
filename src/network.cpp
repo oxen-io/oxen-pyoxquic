@@ -37,6 +37,8 @@ namespace oxen::quic
                                     established_cb,
                                     closed_cb);
                         },
+                        // Network can't get destroyed (via Python GC) before endpoint:
+                        py::keep_alive<0, 1>(),
                         "local_addr"_a,
                         py::kw_only(),  //
                         "outbound_alpns"_a = std::nullopt,
