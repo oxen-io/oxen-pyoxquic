@@ -1,6 +1,7 @@
 #include "common.hpp"
 
-PYBIND11_MODULE(oxquic, m) {
+PYBIND11_MODULE(oxquic, m)
+{
     using namespace oxen::quic;
 
     pybind_address(m);

@@ -2,7 +2,8 @@
 
 namespace oxen::quic
 {
-    void pybind_connection(py::module_& m) {
+    void pybind_connection(py::module_& m)
+    {
         py::class_<ConnectionID>(m, "ConnectionID")
                 .def(py::init<>())
                 .def(py::init<const ConnectionID&>())
@@ -39,20 +40,22 @@ namespace oxen::quic
                         "send_datagram",
                         [](Connection& self, bstring data) { self.send_datagram(std::move(data)); },
                         "data"_a)
-                .def("create_btreq_stream", [](Connection& self,
-                            std::function<void(Stream&, uint64_t)> close_callback) {
-                    return self.get_new_stream<BTRequestStream>(std::move(close_callback));
-                },
-                "on_close"_a = nullptr
-                )
-                .def("create_stream", [](Connection& self,
-                            stream_data_callback on_data,
-                            stream_close_callback on_close) {
-                    return self.get_new_stream(std::move(on_data), std::move(on_close));
-                },
-                "on_data"_a = nullptr,
-                "on_close"_a = nullptr)
-                ;
+                .def(
+                        "create_btreq_stream",
+                        [](Connection& self,
+                           std::function<void(Stream&, uint64_t)> close_callback) {
+                            return self.get_new_stream<BTRequestStream>(std::move(close_callback));
+                        },
+                        "on_close"_a = nullptr)
+                .def(
+                        "create_stream",
+                        [](Connection& self,
+                           stream_data_callback on_data,
+                           stream_close_callback on_close) {
+                            return self.get_new_stream(std::move(on_data), std::move(on_close));
+                        },
+                        "on_data"_a = nullptr,
+                        "on_close"_a = nullptr);
     };
 
 }  // namespace oxen::quic
