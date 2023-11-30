@@ -10,4 +10,5 @@ PYBIND11_MODULE(oxquic, m)
     pybind_endpoint(m);
     pybind_network(m);
     pybind_stream(m);
+    pybind_tls(m);
 }

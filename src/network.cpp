@@ -41,9 +41,9 @@ namespace oxen::quic
                         py::keep_alive<0, 1>(),
                         "local_addr"_a,
                         py::kw_only(),  //
-                        "outbound_alpns"_a = std::nullopt,
-                        "inbound_alpns"_a = std::nullopt,
-                        "handshake_timeout"_a = std::nullopt,
+                        "outbound_alpns"_a = nullptr,
+                        "inbound_alpns"_a = nullptr,
+                        "handshake_timeout"_a = nullptr,
                         "enable_datagrams"_a = false,
                         "on_datagram"_a = nullptr,
                         "on_established"_a = nullptr,

@@ -12,5 +12,6 @@ namespace oxen::quic
     void pybind_endpoint(py::module_& m);
     void pybind_network(py::module_& m);
     void pybind_stream(py::module_& m);
+    void pybind_tls(py::module_& m);
 
 }  // namespace oxen::quic

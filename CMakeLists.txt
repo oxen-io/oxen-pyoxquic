@@ -83,6 +83,7 @@ pybind11_add_module(oxquic
     src/endpoint.cpp
     src/network.cpp
     src/stream.cpp
+    src/tls.cpp
 )
 
 target_link_libraries(oxquic PRIVATE quic pybind11::headers)

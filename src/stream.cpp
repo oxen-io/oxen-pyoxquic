@@ -8,10 +8,10 @@ namespace oxen::quic
 
         py::class_<message>(m, "Message")
                 .def(py::init<BTRequestStream&, std::string, bool>(),
-                     py::arg("bstream"),
-                     py::arg("request"),
-                     py::arg("is_error") = false)
-                .def("respond", &message::respond, py::arg("body"), py::arg("is_error") = false)
+                     "bstream"_a,
+                     "request"_a,
+                     "is_error"_a = false)
+                .def("respond", &message::respond, "body"_a, "is_error"_a = false)
                 .def("view", &message::view)
                 .def("type", &message::type)
                 .def("endpoint", &message::endpoint_str)
@@ -24,26 +24,24 @@ namespace oxen::quic
         py::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
                 .def(py::init([](Connection& conn,
                                  Endpoint& endpoint,
-                                 stream_data_callback data_cb = nullptr,
-                                 stream_close_callback close_cb = nullptr) {
+                                 stream_data_callback data_cb,
+                                 stream_close_callback close_cb) {
                          return std::make_shared<Stream>(
                                  conn, endpoint, std::move(data_cb), std::move(close_cb));
                      }),
-                     py::arg("conn"),
-                     py::arg("endpoint"),
-                     py::arg("data_cb") = nullptr,
-                     py::arg("close_cb") = nullptr)
+                     "conn"_a,
+                     "endpoint"_a,
+                     "data_cb"_a = nullptr,
+                     "close_cb"_a = nullptr)
                 .def("available", &Stream::available)
                 .def("stream_id", &Stream::stream_id)
                 .def("has_unsent", &Stream::has_unsent)
                 .def(
                         "close",
                         [](Stream& self, uint64_t error_code) { self.close(io_error{error_code}); },
-                        py::arg("error_code"))
+                        "error_code"_a)
                 .def(
-                        "send",
-                        [](Stream& self, bstring data) { self.send(data); },
-                        py::arg("data"));
+                        "send", [](Stream& self, bstring data) { self.send(data); }, "data"_a);
 
         py::class_<BTRequestStream, std::shared_ptr<BTRequestStream>>(m, "BTStream")
                 .def(py::init([](Connection& conn,
@@ -59,20 +57,20 @@ namespace oxen::quic
                            std::function<void(message)> hook) {
                             bstream.command(std::move(endpoint), std::move(body), std::move(hook));
                         },
-                        py::arg("request"),
-                        py::arg("body"),
-                        py::arg("hook"))
+                        "request"_a,
+                        "body"_a,
+                        "hook"_a)
                 .def(
                         "command",
                         [](BTRequestStream& bstream, std::string endpoint, std::string body) {
                             bstream.command(std::move(endpoint), std::move(body));
                         },
-                        py::arg("command"),
-                        py::arg("body"))
+                        "command"_a,
+                        "body"_a)
                 .def("register_command",
                      &BTRequestStream::register_command,
-                     py::arg("endpoint"),
-                     py::arg("hook"));
+                     "endpoint"_a,
+                     "hook"_a);
     }
 
 }  // namespace oxen::quic
