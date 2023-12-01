@@ -6,6 +6,34 @@ namespace oxen::quic
     {
         // py::class_<std::shared_ptr<void>>(m, "shared_ptr_void").def(py::init());
 
+        py::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
+                .def(py::init([](Connection& conn,
+                                 Endpoint& endpoint,
+                                 stream_data_callback data_cb,
+                                 stream_close_callback close_cb) {
+                         return std::make_shared<Stream>(
+                                 conn, endpoint, std::move(data_cb), std::move(close_cb));
+                     }),
+                     "conn"_a,
+                     "endpoint"_a,
+                     "data_cb"_a = nullptr,
+                     "close_cb"_a = nullptr)
+                .def_property_readonly("available", &Stream::available)
+                .def_property_readonly("id", &Stream::stream_id)
+                .def_property_readonly("has_unsent", &Stream::has_unsent)
+                .def(
+                        "close",
+                        [](Stream& self, uint64_t error_code) { self.close(io_error{error_code}); },
+                        "error_code"_a)
+                .def(
+                        "send", [](Stream& self, bstring data) { self.send(data); }, "data"_a)
+
+                .def_property_readonly("conn_id", &Stream::conn_id)
+                .def_property_readonly(
+                        "conn",
+                        [](Stream& self) { return &self.conn; },
+                        py::return_value_policy::reference);
+
         py::class_<message>(m, "Message")
                 .def(py::init<BTRequestStream&, std::string, bool>(),
                      "bstream"_a,
@@ -21,29 +49,7 @@ namespace oxen::quic
                 .def("stream", &message::stream)
                 .def("__bool__", &message::operator bool);
 
-        py::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
-                .def(py::init([](Connection& conn,
-                                 Endpoint& endpoint,
-                                 stream_data_callback data_cb,
-                                 stream_close_callback close_cb) {
-                         return std::make_shared<Stream>(
-                                 conn, endpoint, std::move(data_cb), std::move(close_cb));
-                     }),
-                     "conn"_a,
-                     "endpoint"_a,
-                     "data_cb"_a = nullptr,
-                     "close_cb"_a = nullptr)
-                .def("available", &Stream::available)
-                .def("stream_id", &Stream::stream_id)
-                .def("has_unsent", &Stream::has_unsent)
-                .def(
-                        "close",
-                        [](Stream& self, uint64_t error_code) { self.close(io_error{error_code}); },
-                        "error_code"_a)
-                .def(
-                        "send", [](Stream& self, bstring data) { self.send(data); }, "data"_a);
-
-        py::class_<BTRequestStream, std::shared_ptr<BTRequestStream>>(m, "BTStream")
+        py::class_<BTRequestStream, Stream, std::shared_ptr<BTRequestStream>>(m, "BTStream")
                 .def(py::init([](Connection& conn,
                                  Endpoint& endpoint,
                                  std::function<void(Stream&, uint64_t)> close_cb = nullptr) {
