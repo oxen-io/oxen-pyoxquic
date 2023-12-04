@@ -1,3 +1,4 @@
+#include <pybind11/gil.h>
 #include "utils.hpp"
 
 namespace oxen::quic
@@ -16,40 +17,47 @@ namespace oxen::quic
                     return "<ConnectionID: " + cid.to_string() + ">";
                 });
 
-        // Must be held using a shared_ptr
-        py::class_<Connection, std::shared_ptr<Connection>>(m, "Connection")
-                .def(py::init(&Connection::make_conn))
-                .def_static("make_conn", &Connection::make_conn)
-                .def("close_connection", &Connection::close_connection, "error_code"_a = 0)
-                .def_property_readonly("scid", &Connection::scid)
-                .def_property_readonly("local", &Connection::local)
-                .def_property_readonly("remote", &Connection::remote)
-                .def_property_readonly("inbound", &Connection::is_inbound)
-                .def_property_readonly("outbound", &Connection::is_outbound)
-                .def_property_readonly("is_validated", &Connection::is_validated)
-                .def_property_readonly("selected_alpn", &Connection::selected_alpn)
-                .def_property_readonly("max_streams", &Connection::get_max_streams)
-                .def_property_readonly("streams_available", &Connection::get_streams_available)
-                .def_property_readonly("max_datagram_size", &Connection::get_max_datagram_size)
-                .def_property_readonly("datagrams_enabled", &Connection::datagrams_enabled)
-                .def_property_readonly("packet_splitting_enabled", &Connection::packet_splitting_enabled)
+        py::class_<connection_interface, std::shared_ptr<connection_interface>>(m, "Connection")
+                .def("close", &connection_interface::close_connection, "error_code"_a = 0)
+                .def_property_readonly("scid", &connection_interface::scid)
+                .def_property_readonly("local", &connection_interface::local)
+                .def_property_readonly("remote", &connection_interface::remote)
+                .def_property_readonly("inbound", &connection_interface::is_inbound)
+                .def_property_readonly("outbound", &connection_interface::is_outbound)
+                .def_property_readonly("is_validated", &connection_interface::is_validated)
+                .def_property_readonly("selected_alpn", &connection_interface::selected_alpn)
+                .def_property_readonly("max_streams", &connection_interface::get_max_streams)
+                .def_property_readonly(
+                        "streams_available", &connection_interface::get_streams_available)
+                .def_property_readonly(
+                        "max_datagram_size", &connection_interface::get_max_datagram_size)
+                .def_property_readonly(
+                        "datagrams_enabled", &connection_interface::datagrams_enabled)
+                .def_property_readonly(
+                        "packet_splitting_enabled", &connection_interface::packet_splitting_enabled)
                 .def(
                         "send_datagram",
-                        [](Connection& self, bstring data) { self.send_datagram(std::move(data)); },
+                        [](connection_interface& self, bstring data) {
+                            self.send_datagram(std::move(data));
+                        },
                         "data"_a)
                 .def(
                         "create_btreq_stream",
-                        [](Connection& self,
-                           std::function<void(Stream&, uint64_t)> close_callback) {
-                            return self.get_new_stream<BTRequestStream>(std::move(close_callback));
+                        [](connection_interface& self, pystream_close close_callback) {
+                            return self.get_new_stream<BTRequestStream>(
+                                    move_hack_function_wrapper(close_callback));
                         },
                         "on_close"_a = nullptr)
                 .def(
                         "create_stream",
-                        [](Connection& self,
-                           stream_data_callback on_data,
-                           stream_close_callback on_close) {
-                            return self.get_new_stream(std::move(on_data), std::move(on_close));
+                        [](connection_interface& self,
+                           pystream_data on_data,
+                           pystream_close on_close) {
+
+                            py::gil_scoped_release bye_gil{};
+                            return self.get_new_stream(
+                                    move_hack_function_wrapper(on_data),
+                                    move_hack_function_wrapper(on_close));
                         },
                         "on_data"_a = nullptr,
                         "on_close"_a = nullptr);

@@ -7,12 +7,17 @@ namespace oxen::quic
         // py::class_<std::shared_ptr<void>>(m, "shared_ptr_void").def(py::init());
 
         py::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
-                .def(py::init([](Connection& conn,
+                .def(py::init([](connection_interface& conni,
                                  Endpoint& endpoint,
                                  stream_data_callback data_cb,
                                  stream_close_callback close_cb) {
+                         auto* conn = dynamic_cast<Connection*>(&conni);
+                         if (!conn)
+                             throw std::runtime_error{
+                                     "Internal error: can't downcast to Connection!"};
+
                          return std::make_shared<Stream>(
-                                 conn, endpoint, std::move(data_cb), std::move(close_cb));
+                                 *conn, endpoint, std::move(data_cb), std::move(close_cb));
                      }),
                      "conn"_a,
                      "endpoint"_a,
@@ -26,12 +31,18 @@ namespace oxen::quic
                         [](Stream& self, uint64_t error_code) { self.close(io_error{error_code}); },
                         "error_code"_a)
                 .def(
-                        "send", [](Stream& self, bstring data) { self.send(data); }, "data"_a)
+                        "send",
+                        [](Stream& self, bstring data) { self.send(std::move(data)); },
+                        "data"_a)
+                .def(
+                        "send",
+                        [](Stream& self, std::string data) { self.send(std::move(data)); },
+                        "data"_a)
 
                 .def_property_readonly("conn_id", &Stream::conn_id)
                 .def_property_readonly(
                         "conn",
-                        [](Stream& self) { return &self.conn; },
+                        [](Stream& self) -> connection_interface* { return &self.conn; },
                         py::return_value_policy::reference);
 
         py::class_<message>(m, "Message")
@@ -50,11 +61,19 @@ namespace oxen::quic
                 .def("__bool__", &message::operator bool);
 
         py::class_<BTRequestStream, Stream, std::shared_ptr<BTRequestStream>>(m, "BTStream")
-                .def(py::init([](Connection& conn,
+                .def(py::init([](connection_interface& conni,
                                  Endpoint& endpoint,
-                                 std::function<void(Stream&, uint64_t)> close_cb = nullptr) {
-                    return std::make_shared<BTRequestStream>(conn, endpoint, std::move(close_cb));
-                }))
+                                 pystream_close close_cb) {
+                         auto* conn = dynamic_cast<Connection*>(&conni);
+                         if (!conn)
+                             throw std::runtime_error{
+                                     "Internal error: can't downcast to Connection!"};
+                         return std::make_shared<BTRequestStream>(
+                                 *conn, endpoint, move_hack_function_wrapper(close_cb));
+                     }),
+                     "conn"_a,
+                     "endpoint"_a,
+                     "on_close"_a = nullptr)
                 .def(
                         "request",
                         [](BTRequestStream& bstream,

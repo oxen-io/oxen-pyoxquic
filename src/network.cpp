@@ -15,9 +15,9 @@ namespace oxen::quic
                            std::optional<std::vector<std::string>> inbound_alpns,
                            std::optional<double> handshake_timeout,
                            bool datagrams,
-                           dgram_data_callback dgram_cb,
-                           connection_established_callback established_cb,
-                           connection_closed_callback closed_cb) {
+                           pydgram_data dgram_cb,
+                           pyconnection_established established_cb,
+                           pyconnection_closed closed_cb) {
                             return self.endpoint(
                                     local_addr,
                                     datagrams ? std::make_optional<opt::enable_datagrams>()
@@ -27,15 +27,15 @@ namespace oxen::quic
                                                       std::chrono::nanoseconds{static_cast<int64_t>(
                                                               1e9 * *handshake_timeout)})
                                             : std::nullopt,
-                                    dgram_data_callback{std::move(dgram_cb)},
+                                    move_hack_function_wrapper(dgram_cb),
                                     outbound_alpns ? std::make_optional<opt::outbound_alpns>(
                                                              std::move(*outbound_alpns))
                                                    : std::nullopt,
                                     inbound_alpns ? std::make_optional<opt::inbound_alpns>(
                                                             std::move(*inbound_alpns))
                                                   : std::nullopt,
-                                    established_cb,
-                                    closed_cb);
+                                    move_hack_function_wrapper(established_cb),
+                                    move_hack_function_wrapper(closed_cb));
                         },
                         // Network can't get destroyed (via Python GC) before endpoint:
                         py::keep_alive<0, 1>(),

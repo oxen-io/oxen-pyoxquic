@@ -5,7 +5,7 @@ from oxquic import Network, GNUTLSCreds, Address, RemoteAddress
 from nacl.signing import SigningKey
 import time
 
-oxquic.enable_logging("stderr", "trace")
+#oxquic.enable_logging("stderr", "trace")
 
 
 k1 = SigningKey.generate()
@@ -33,6 +33,7 @@ def stream_opened(s):
     print(
         f"{'Incoming' if c.inbound else 'Outgoing'} stream {s} established with {c.remote}."
     )
+    return 0
 
 
 def stream_closed(s, code):
@@ -44,10 +45,6 @@ def stream_closed(s, code):
 
 def stream_data(s, data):
     c = s.conn
-    # If it's printable ASCII then we can just print it directly, otherwise we'll let python format
-    # the bytes
-    if all(0x20 <= x <= 0x7E):
-        data = data.decode()
 
     print(f"{c.remote.host}:{c.remote.port}[s.id]» {data}")
 
@@ -76,4 +73,10 @@ c2 = e2.connect(
     on_stream_data=stream_data,
 )
 
-time.sleep(100)
+s = c2.create_stream()
+s.send(b'Hello world!')
+
+while True:
+    time.sleep(0.25)
+    line = input('> ')
+    s.send(line)

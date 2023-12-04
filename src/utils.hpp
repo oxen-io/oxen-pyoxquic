@@ -13,7 +13,7 @@ namespace py = pybind11;
 
 using namespace py::literals;
 
-PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>);
+// PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>);
 
 namespace oxen::quic
 {
@@ -36,6 +36,9 @@ namespace oxen::quic
             char* buf;
             ssize_t len;
 
+            if (!PyBytes_Check(src.ptr()))
+                return false;
+
             if (PyBytes_AsStringAndSize(src.ptr(), &buf, &len) != 0)
                 throw error_already_set{};
 
@@ -55,6 +58,69 @@ namespace oxen::quic
             return obj;
         }
     };
+
+    template <typename T>
+    constexpr bool need_pointer_hack =
+            std::is_same_v<T, Stream*> || std::is_same_v<T, dgram_interface*> ||
+            std::is_same_v<T, Connection*> || std::is_same_v<T, connection_interface*> ||
+            std::is_same_v<T, Endpoint*>;
+
+    template <typename T>
+    using pointer_hack_t = std::conditional_t<need_pointer_hack<T>, std::remove_pointer_t<T>&, T>;
+
+    template <typename T, std::enable_if_t<need_pointer_hack<T>, int> = 0>
+    T pointer_hack(std::remove_pointer_t<T>& ref)
+    {
+        static_assert(std::is_pointer_v<T>);
+        static_assert(std::is_lvalue_reference_v<decltype(ref)>);
+        return &ref;
+    }
+    template <typename T, std::enable_if_t<!need_pointer_hack<T>, int> = 0>
+    T pointer_hack(T v)
+    {
+        return std::forward<T>(v);
+    }
+
+    // If we directly bind stream_open_callback and so on, which are std::function's taking a
+    // reference such as `connection_interface&` argument, pybind will attempt to copy the object
+    // (which fails, since most of these are non-copyable) before calling into the Python function,
+    // but with a pointer Pybind doesn't do that, so work around it with this wrapper: we wrap
+    // versions that take raw pointers with pybind, then use this function to convert those into the
+    // reference-taking functions that libquic wants, where the body does the conversion to pointer
+    // when invoked.
+    //
+    // For instance, call this with a `std::function<void(Stream*, int)>` and get back a
+    // `std::function<void(Stream&, int)>` that calls the former when invoked.
+    //
+    // Also this function does a std::move on the given function for you, for free!  Hurray!
+    template <typename R, typename... T>
+    std::function<R(pointer_hack_t<T>...)> move_hack_function_wrapper(
+            std::function<R(T... args)>& py_func)
+    {
+        static_assert(
+                (need_pointer_hack<T> || ...),
+                "make_function_wrapper requires a std::function with at least one "
+                "Stream/connection_interface/Endpoint reference argument");
+
+        if (py_func)
+            return [f = std::move(py_func)](pointer_hack_t<T>... args) {
+                return f(pointer_hack<T>(args)...);
+            };
+        return nullptr;
+    }
+
+    // Various typedefs for functions designed to be used with the above:
+    using pystream_data = std::function<void(Stream*, bstring_view)>;
+    using pystream_close = std::function<void(Stream*, uint64_t error_code)>;
+    using pystream_constructor =
+            std::function<std::shared_ptr<Stream>(Connection*, Endpoint*, std::optional<int64_t>)>;
+    using pystream_open = std::function<uint64_t(Stream*)>;
+
+    using pydgram_data = std::function<void(dgram_interface*, bstring)>;
+
+    using pyconnection_established = std::function<void(connection_interface* conn)>;
+    using pyconnection_closed = std::function<void(connection_interface* conn, uint64_t ec)>;
+
 }  // namespace oxen::quic
 
 namespace pybind11::detail
