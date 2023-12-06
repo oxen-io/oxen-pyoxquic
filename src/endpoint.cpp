@@ -67,7 +67,7 @@ namespace oxen::quic
                             auto st_open = wrap_stream_open_cb(f_st_open);
                             auto st_data = wrap_stream_data_cb(f_st_data);
                             auto st_close = wrap_stream_close_cb(f_st_close);
-                            auto st_ctor = wrap_stream_close_cb(f_st_ctor);
+                            auto st_ctor = wrap_stream_ctor_cb(f_st_ctor);
                             auto conn_est = wrap_conn_established_cb(f_conn_est);
                             auto conn_closed = wrap_conn_closed_cb(f_conn_closed);
                             py::gil_scoped_release bye_gil{};
@@ -91,7 +91,7 @@ namespace oxen::quic
                         "on_stream_open"_a = nullptr,
                         "on_stream_data"_a = nullptr,
                         "on_stream_close"_a = nullptr,
-                        "initial_stream"_a = nullptr,
+                        "on_stream_construct"_a = nullptr,
                         "on_connection"_a = nullptr,
                         "on_closed"_a = nullptr);
     }

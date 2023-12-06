@@ -45,9 +45,9 @@ namespace oxen::quic
                         "data"_a)
                 .def(
                         "create_btreq_stream",
-                        [](connection_interface& self, std::optional<py::function> close_callback) {
+                        [](connection_interface& self, std::optional<py::function> on_close) {
                             return self.get_new_stream<BTRequestStream>(
-                                    wrap_stream_close_cb(close_callback));
+                                    wrap_stream_close_cb(on_close));
                         },
                         "on_close"_a = nullptr)
                 .def(

@@ -7,12 +7,11 @@ import time
 
 #oxquic.enable_logging("stderr", "trace")
 
+server_key = SigningKey.generate()
+server_credentials = GNUTLSCreds(server_key.encode(), server_key.verify_key.encode())
 
-k1 = SigningKey.generate()
-t1 = GNUTLSCreds(k1.encode(), k1.verify_key.encode())
-
-n1 = Network()
-e1 = n1.endpoint(Address("127.0.0.5", 1234))
+network = Network()
+server = network.endpoint(Address("127.0.0.5", 1234))
 
 
 def on_connect(c):
@@ -26,6 +25,12 @@ def on_close(c, code):
     print(
         f"{'Incom' if c.inbound else 'Outgo'}ing connection with {c.remote} has closed (status {code})."
     )
+
+
+def stream_constructor(c, e, id):
+    if (id == 0):
+        return c.create_btreq_stream(c, e)
+    return c.create_stream(c, e)
 
 
 def stream_opened(s):
@@ -45,36 +50,40 @@ def stream_closed(s, code):
 
 def stream_data(s, data):
     c = s.conn
-
     print(f"{c.remote.host}:{c.remote.port}[{s.id}]» {data}")
 
 
-c1 = e1.listen(
-    t1,
+server.listen(
+    server_credentials,
     on_connection=on_connect,
     on_closed=on_close,
     on_stream_open=stream_opened,
     on_stream_close=stream_closed,
+    on_stream_construct=stream_constructor,
     on_stream_data=stream_data,
 )
 
-k2 = SigningKey.generate()
-t2 = GNUTLSCreds(k2.encode(), k2.verify_key.encode())
 
-#n2 = Network()
-e2 = n1.endpoint(Address())
-c2 = e2.connect(
-    RemoteAddress(k1.verify_key.encode(), "127.0.0.5", 1234),
-    t2,
+client_key = SigningKey.generate()
+client_credentials = GNUTLSCreds(client_key.encode(), client_key.verify_key.encode())
+
+
+client = network.endpoint(Address())
+client_connection = client.connect(
+    RemoteAddress(server_key.verify_key.encode(), "127.0.0.5", 1234),
+    client_credentials,
     on_connection=on_connect,
     on_closed=on_close,
     on_stream_open=stream_opened,
     on_stream_close=stream_closed,
+    on_stream_construct=stream_constructor,
     on_stream_data=stream_data,
 )
 
-s = c2.create_stream()
+
+s = client_connection.create_stream()
 s.send(b'Hello world!')
+
 
 while True:
     time.sleep(0.25)

@@ -13,8 +13,6 @@ namespace py = pybind11;
 
 using namespace py::literals;
 
-// PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>);
-
 namespace oxen::quic
 {
     using namespace pybind11;

@@ -5,8 +5,6 @@ namespace oxen::quic
 {
     void pybind_stream(py::module_& m)
     {
-        // py::class_<std::shared_ptr<void>>(m, "shared_ptr_void").def(py::init());
-
         py::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
                 .def(py::init([](connection_interface& conni,
                                  Endpoint& endpoint,
@@ -42,7 +40,6 @@ namespace oxen::quic
                         "send",
                         [](Stream& self, std::string data) { self.send(std::move(data)); },
                         "data"_a)
-
                 .def_property_readonly("conn_id", &Stream::conn_id)
                 .def_property_readonly(
                         "conn",
