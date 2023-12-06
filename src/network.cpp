@@ -1,4 +1,6 @@
-#include "quic/opt.hpp"
+#include <quic/opt.hpp>
+
+#include "callbacks.hpp"
 #include "utils.hpp"
 
 namespace oxen::quic
@@ -15,9 +17,9 @@ namespace oxen::quic
                            std::optional<std::vector<std::string>> inbound_alpns,
                            std::optional<double> handshake_timeout,
                            bool datagrams,
-                           pydgram_data dgram_cb,
-                           pyconnection_established established_cb,
-                           pyconnection_closed closed_cb) {
+                           std::optional<py::function> dgram_cb,
+                           std::optional<py::function> established_cb,
+                           std::optional<py::function> closed_cb) {
                             return self.endpoint(
                                     local_addr,
                                     datagrams ? std::make_optional<opt::enable_datagrams>()
@@ -27,15 +29,15 @@ namespace oxen::quic
                                                       std::chrono::nanoseconds{static_cast<int64_t>(
                                                               1e9 * *handshake_timeout)})
                                             : std::nullopt,
-                                    move_hack_function_wrapper(dgram_cb),
+                                    wrap_dgram_data_cb(dgram_cb),
                                     outbound_alpns ? std::make_optional<opt::outbound_alpns>(
                                                              std::move(*outbound_alpns))
                                                    : std::nullopt,
                                     inbound_alpns ? std::make_optional<opt::inbound_alpns>(
                                                             std::move(*inbound_alpns))
                                                   : std::nullopt,
-                                    move_hack_function_wrapper(established_cb),
-                                    move_hack_function_wrapper(closed_cb));
+                                    wrap_conn_established_cb(established_cb),
+                                    wrap_conn_closed_cb(closed_cb));
                         },
                         // Network can't get destroyed (via Python GC) before endpoint:
                         py::keep_alive<0, 1>(),

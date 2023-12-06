@@ -1,4 +1,6 @@
 #include <pybind11/gil.h>
+
+#include "callbacks.hpp"
 #include "utils.hpp"
 
 namespace oxen::quic
@@ -43,21 +45,19 @@ namespace oxen::quic
                         "data"_a)
                 .def(
                         "create_btreq_stream",
-                        [](connection_interface& self, pystream_close close_callback) {
+                        [](connection_interface& self, std::optional<py::function> close_callback) {
                             return self.get_new_stream<BTRequestStream>(
-                                    move_hack_function_wrapper(close_callback));
+                                    wrap_stream_close_cb(close_callback));
                         },
                         "on_close"_a = nullptr)
                 .def(
                         "create_stream",
                         [](connection_interface& self,
-                           pystream_data on_data,
-                           pystream_close on_close) {
-
+                           std::optional<py::function> on_data,
+                           std::optional<py::function> on_close) {
                             py::gil_scoped_release bye_gil{};
                             return self.get_new_stream(
-                                    move_hack_function_wrapper(on_data),
-                                    move_hack_function_wrapper(on_close));
+                                    wrap_stream_data_cb(on_data), wrap_stream_close_cb(on_close));
                         },
                         "on_data"_a = nullptr,
                         "on_close"_a = nullptr);

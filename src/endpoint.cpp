@@ -3,6 +3,7 @@
 
 #include <quic/opt.hpp>
 
+#include "callbacks.hpp"
 #include "utils.hpp"
 
 namespace oxen::quic
@@ -16,23 +17,29 @@ namespace oxen::quic
                         [](Endpoint& self,
                            std::shared_ptr<TLSCreds> tls,
                            std::optional<int> max_streams,
-                           pystream_open f_st_open,
-                           pystream_data f_st_data,
-                           pystream_close f_st_close,
-                           pystream_constructor f_st_ctor,
-                           pyconnection_established f_conn_est,
-                           pyconnection_closed f_conn_closed) {
+                           std::optional<py::function> f_st_open,
+                           std::optional<py::function> f_st_data,
+                           std::optional<py::function> f_st_close,
+                           std::optional<py::function> f_st_ctor,
+                           std::optional<py::function> f_conn_est,
+                           std::optional<py::function> f_conn_closed) {
+                            auto st_open = wrap_stream_open_cb(f_st_open);
+                            auto st_data = wrap_stream_data_cb(f_st_data);
+                            auto st_close = wrap_stream_close_cb(f_st_close);
+                            auto st_ctor = wrap_stream_close_cb(f_st_ctor);
+                            auto conn_est = wrap_conn_established_cb(f_conn_est);
+                            auto conn_closed = wrap_conn_closed_cb(f_conn_closed);
                             py::gil_scoped_release bye_gil{};
                             self.listen(
                                     std::move(tls),
                                     max_streams ? std::make_optional<opt::max_streams>(*max_streams)
                                                 : std::nullopt,
-                                    move_hack_function_wrapper(f_st_open),
-                                    move_hack_function_wrapper(f_st_data),
-                                    move_hack_function_wrapper(f_st_close),
-                                    move_hack_function_wrapper(f_st_ctor),
-                                    move_hack_function_wrapper(f_conn_est),
-                                    move_hack_function_wrapper(f_conn_closed));
+                                    std::move(st_open),
+                                    std::move(st_data),
+                                    std::move(st_close),
+                                    std::move(st_ctor),
+                                    std::move(conn_est),
+                                    std::move(conn_closed));
                         },
                         py::keep_alive<0, 1>(),
                         "tls_creds"_a,
@@ -51,24 +58,30 @@ namespace oxen::quic
                            RemoteAddress remote,
                            std::shared_ptr<TLSCreds> tls,
                            std::optional<int> max_streams,
-                           pystream_open f_st_open,
-                           pystream_data f_st_data,
-                           pystream_close f_st_close,
-                           pystream_constructor f_st_ctor,
-                           pyconnection_established f_conn_est,
-                           pyconnection_closed f_conn_closed) {
+                           std::optional<py::function> f_st_open,
+                           std::optional<py::function> f_st_data,
+                           std::optional<py::function> f_st_close,
+                           std::optional<py::function> f_st_ctor,
+                           std::optional<py::function> f_conn_est,
+                           std::optional<py::function> f_conn_closed) {
+                            auto st_open = wrap_stream_open_cb(f_st_open);
+                            auto st_data = wrap_stream_data_cb(f_st_data);
+                            auto st_close = wrap_stream_close_cb(f_st_close);
+                            auto st_ctor = wrap_stream_close_cb(f_st_ctor);
+                            auto conn_est = wrap_conn_established_cb(f_conn_est);
+                            auto conn_closed = wrap_conn_closed_cb(f_conn_closed);
                             py::gil_scoped_release bye_gil{};
                             return self.connect(
                                     std::move(remote),
                                     std::move(tls),
                                     max_streams ? std::make_optional<opt::max_streams>(*max_streams)
                                                 : std::nullopt,
-                                    move_hack_function_wrapper(f_st_open),
-                                    move_hack_function_wrapper(f_st_data),
-                                    move_hack_function_wrapper(f_st_close),
-                                    move_hack_function_wrapper(f_st_ctor),
-                                    move_hack_function_wrapper(f_conn_est),
-                                    move_hack_function_wrapper(f_conn_closed));
+                                    std::move(st_open),
+                                    std::move(st_data),
+                                    std::move(st_close),
+                                    std::move(st_ctor),
+                                    std::move(conn_est),
+                                    std::move(conn_closed));
                         },
                         py::keep_alive<0, 1>(),
                         "remote"_a,

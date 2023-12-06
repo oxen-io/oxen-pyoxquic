@@ -1,3 +1,4 @@
+#include "callbacks.hpp"
 #include "utils.hpp"
 
 namespace oxen::quic
@@ -9,15 +10,18 @@ namespace oxen::quic
         py::class_<Stream, std::shared_ptr<Stream>>(m, "Stream")
                 .def(py::init([](connection_interface& conni,
                                  Endpoint& endpoint,
-                                 stream_data_callback data_cb,
-                                 stream_close_callback close_cb) {
+                                 std::optional<py::function> data_cb,
+                                 std::optional<py::function> close_cb) {
                          auto* conn = dynamic_cast<Connection*>(&conni);
                          if (!conn)
                              throw std::runtime_error{
                                      "Internal error: can't downcast to Connection!"};
 
                          return std::make_shared<Stream>(
-                                 *conn, endpoint, std::move(data_cb), std::move(close_cb));
+                                 *conn,
+                                 endpoint,
+                                 wrap_stream_data_cb(data_cb),
+                                 wrap_stream_close_cb(close_cb));
                      }),
                      "conn"_a,
                      "endpoint"_a,
@@ -63,13 +67,13 @@ namespace oxen::quic
         py::class_<BTRequestStream, Stream, std::shared_ptr<BTRequestStream>>(m, "BTStream")
                 .def(py::init([](connection_interface& conni,
                                  Endpoint& endpoint,
-                                 pystream_close close_cb) {
+                                 std::optional<py::function> close_cb) {
                          auto* conn = dynamic_cast<Connection*>(&conni);
                          if (!conn)
                              throw std::runtime_error{
                                      "Internal error: can't downcast to Connection!"};
                          return std::make_shared<BTRequestStream>(
-                                 *conn, endpoint, move_hack_function_wrapper(close_cb));
+                                 *conn, endpoint, wrap_stream_close_cb(close_cb));
                      }),
                      "conn"_a,
                      "endpoint"_a,

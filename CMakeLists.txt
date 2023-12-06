@@ -78,6 +78,7 @@ pybind11_add_module(oxquic
     src/oxquic.cpp
 
     src/address.cpp
+    src/callbacks.cpp
     src/connection.cpp
     src/crypto.cpp
     src/endpoint.cpp

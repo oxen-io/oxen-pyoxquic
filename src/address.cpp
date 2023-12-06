@@ -30,12 +30,13 @@ namespace oxen::quic
                      "port"_a,
                      "Constructs an Address for establishing an outgoing connection to a remote "
                      "pubkey, ip, and port.")
-                .def("__str__",
-                     [](RemoteAddress& self) {
-                         return "{}/{}"_format(
-                                 self.to_string(), oxenc::to_hex(self.get_remote_key()));
-                     },
-                     "Formats the address as IP:PORT/REMOTEPUBKEY")
+                .def(
+                        "__str__",
+                        [](RemoteAddress& self) {
+                            return "{}/{}"_format(
+                                    self.to_string(), oxenc::to_hex(self.get_remote_key()));
+                        },
+                        "Formats the address as IP:PORT/REMOTEPUBKEY")
 
                 /**/;
     }

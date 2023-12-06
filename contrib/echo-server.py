@@ -46,7 +46,7 @@ def stream_closed(s, code):
 def stream_data(s, data):
     c = s.conn
 
-    print(f"{c.remote.host}:{c.remote.port}[s.id]» {data}")
+    print(f"{c.remote.host}:{c.remote.port}[{s.id}]» {data}")
 
 
 c1 = e1.listen(
@@ -78,5 +78,5 @@ s.send(b'Hello world!')
 
 while True:
     time.sleep(0.25)
-    line = input('> ')
+    line = input('> ').encode()
     s.send(line)
