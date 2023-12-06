@@ -49,13 +49,7 @@ namespace oxen::quic
 
         static handle cast(StringT src, return_value_policy /* policy */, handle /* parent */)
         {
-            auto obj = reinterpret_steal<object>(PYBIND11_BYTES_FROM_STRING_AND_SIZE(
-                    reinterpret_cast<const char*>(src.data()), src.size()));
-            if (!obj)
-            {
-                pybind11_fail("Could not allocate bytes object!");
-            }
-            return obj;
+            return py::bytes{reinterpret_cast<const char*>(src.data()), src.size()};
         }
     };
 
