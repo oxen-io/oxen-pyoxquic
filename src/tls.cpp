@@ -1,5 +1,5 @@
-#include <quic/crypto.hpp>
-#include <quic/gnutls_crypto.hpp>
+#include <oxen/quic/crypto.hpp>
+#include <oxen/quic/gnutls_crypto.hpp>
 #include <stdexcept>
 
 #include "common.hpp"

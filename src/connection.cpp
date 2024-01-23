@@ -1,4 +1,8 @@
 #include <pybind11/gil.h>
+#include <pybind11/operators.h>
+
+#include <oxen/quic/btstream.hpp>
+#include <oxen/quic/connection.hpp>
 
 #include "callbacks.hpp"
 #include "utils.hpp"
@@ -10,18 +14,22 @@ namespace oxen::quic
         py::class_<ConnectionID>(m, "ConnectionID")
                 .def(py::self == py::self)
                 .def(py::self != py::self)
+                .def(py::self < py::self)
                 .def(py::hash(py::self))
+                .def_readwrite("id", &ConnectionID::id)
                 .def("__str__",
                      [](const ConnectionID& cid) {
                          return "<ConnectionID: " + cid.to_string() + ">";
                      })
-                .def("__repr__", [](const ConnectionID& cid) {
-                    return "<ConnectionID: " + cid.to_string() + ">";
-                });
+                .def("__repr__",
+                     [](const ConnectionID& cid) {
+                         return "<ConnectionID: " + cid.to_string() + ">";
+                     })
+                /**/;
 
         py::class_<connection_interface, std::shared_ptr<connection_interface>>(m, "Connection")
                 .def("close", &connection_interface::close_connection, "error_code"_a = 0)
-                .def_property_readonly("scid", &connection_interface::scid)
+                .def_property_readonly("scid", &connection_interface::reference_id)
                 .def_property_readonly("local", &connection_interface::local)
                 .def_property_readonly("remote", &connection_interface::remote)
                 .def_property_readonly("inbound", &connection_interface::is_inbound)
@@ -44,23 +52,40 @@ namespace oxen::quic
                         },
                         "data"_a)
                 .def(
-                        "create_btreq_stream",
+                        "open_stream",
+                        [](connection_interface& self,
+                           std::optional<py::function> on_data,
+                           std::optional<py::function> on_close) {
+                            return self.open_stream<Stream>(
+                                    wrap_stream_data_cb(on_data), wrap_stream_close_cb(on_close));
+                        },
+                        "on_data"_a = nullptr,
+                        "on_close"_a = nullptr)
+                .def(
+                        "queue_incoming_stream",
+                        [](connection_interface& self,
+                           std::optional<py::function> on_data,
+                           std::optional<py::function> on_close) {
+                            return self.queue_incoming_stream<Stream>(
+                                    wrap_stream_data_cb(on_data), wrap_stream_close_cb(on_close));
+                        },
+                        "on_data"_a = nullptr,
+                        "on_close"_a = nullptr)
+                .def(
+                        "open_btreq_stream",
                         [](connection_interface& self, std::optional<py::function> on_close) {
-                            return self.get_new_stream<BTRequestStream>(
+                            return self.open_stream<BTRequestStream>(
                                     wrap_stream_close_cb(on_close));
                         },
                         "on_close"_a = nullptr)
                 .def(
-                        "create_stream",
-                        [](connection_interface& self,
-                           std::optional<py::function> on_data,
-                           std::optional<py::function> on_close) {
-                            py::gil_scoped_release bye_gil{};
-                            return self.get_new_stream(
-                                    wrap_stream_data_cb(on_data), wrap_stream_close_cb(on_close));
+                        "queue_incoming_btreq_stream",
+                        [](connection_interface& self, std::optional<py::function> on_close) {
+                            return self.queue_incoming_stream<BTRequestStream>(
+                                    wrap_stream_close_cb(on_close));
                         },
-                        "on_data"_a = nullptr,
-                        "on_close"_a = nullptr);
+                        "on_close"_a = nullptr)
+                /**/;
     };
 
 }  // namespace oxen::quic

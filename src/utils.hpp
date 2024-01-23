@@ -1,13 +1,10 @@
 #pragma once
 
-#include <pybind11/cast.h>
-#include <pybind11/functional.h>
-#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include <iostream>
-#include <quic.hpp>
+#include <oxen/quic/utils.hpp>
 
 namespace py = pybind11;
 
@@ -15,6 +12,45 @@ using namespace py::literals;
 
 namespace oxen::quic
 {
+    // Helpers for constructing generic optional opt::whatever values from Python optional input
+    // values.
+
+    template <typename Opt, typename T>
+    static std::optional<Opt> value_option(const std::optional<T>& val)
+    {
+        return val ? std::make_optional<Opt>(*val) : std::nullopt;
+    }
+
+    template <typename Opt>
+    static std::optional<Opt> flag_option(bool enabled)
+    {
+        return enabled ? std::make_optional<Opt>() : std::nullopt;
+    }
+
+    template <typename Opt, typename TimeUnit = std::chrono::nanoseconds>
+    static std::optional<Opt> duration_option(const std::optional<double>& seconds)
+    {
+        return seconds ? std::make_optional<Opt>(std::chrono::duration_cast<TimeUnit>(
+                                 std::chrono::duration<double>(*seconds)))
+                       : std::nullopt;
+    }
+
+    template <typename Opt>
+    static std::optional<Opt> ustrings_option(
+            const std::optional<std::vector<std::string_view>>& vals)
+    {
+        std::optional<Opt> result;
+        if (vals)
+        {
+            std::vector<ustring> u_vals;
+            u_vals.reserve(vals->size());
+            for (const auto& v : *vals)
+                u_vals.emplace_back(reinterpret_cast<const unsigned char*>(v.data()), v.size());
+            result.emplace(std::move(u_vals));
+        }
+        return result;
+    }
+
     using namespace pybind11;
     using namespace pybind11::detail;
 
@@ -47,7 +83,7 @@ namespace oxen::quic
 
         static handle cast(StringT src, return_value_policy /* policy */, handle /* parent */)
         {
-            return py::bytes{reinterpret_cast<const char*>(src.data()), src.size()};
+            return py::bytes{reinterpret_cast<const char*>(src.data()), src.size()}.release();
         }
     };
 

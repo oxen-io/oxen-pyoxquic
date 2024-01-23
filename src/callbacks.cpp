@@ -1,6 +1,11 @@
 #include "callbacks.hpp"
 
 #include <pybind11/gil.h>
+#include <pybind11/functional.h>
+#include <pybind11/stl.h>
+
+#include <oxen/quic/connection.hpp>
+#include <oxen/quic/endpoint.hpp>
 
 namespace oxen::quic
 {
@@ -57,7 +62,7 @@ namespace oxen::quic
         if (!f || f->is_none())
             return nullptr;
         return [f = gil_deleted_pyfunc(std::move(*f))](
-                       connection_interface& c, Endpoint& e, std::optional<int64_t> streamid) {
+                       Connection& c, Endpoint& e, std::optional<int64_t> streamid) {
             py::gil_scoped_acquire gil;
             return py::cast<std::shared_ptr<Stream>>(
                     (*f)(c.shared_from_this(), e.shared_from_this(), streamid));

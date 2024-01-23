@@ -1,3 +1,5 @@
+#include <oxen/quic/address.hpp>
+
 #include "utils.hpp"
 
 namespace oxen::quic

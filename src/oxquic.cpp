@@ -1,5 +1,5 @@
 #include <oxen/log.hpp>
-#include <quic/utils.hpp>
+#include <oxen/quic/utils.hpp>
 
 #include "common.hpp"
 #include "utils.hpp"
@@ -14,6 +14,7 @@ PYBIND11_MODULE(oxquic, m)
     pybind_endpoint(m);
     pybind_network(m);
     pybind_stream(m);
+    pybind_btreqstream(m);
     pybind_tls(m);
 
     m.def(

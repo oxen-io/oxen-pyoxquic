@@ -1,7 +1,8 @@
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 
-#include <quic/opt.hpp>
+#include <oxen/quic/endpoint.hpp>
+#include <oxen/quic/opt.hpp>
 
 #include "callbacks.hpp"
 #include "utils.hpp"
@@ -17,6 +18,7 @@ namespace oxen::quic
                         [](Endpoint& self,
                            std::shared_ptr<TLSCreds> tls,
                            std::optional<int> max_streams,
+                           std::optional<double> keep_alive,
                            std::optional<py::function> f_st_open,
                            std::optional<py::function> f_st_data,
                            std::optional<py::function> f_st_close,
@@ -32,8 +34,9 @@ namespace oxen::quic
                             py::gil_scoped_release bye_gil{};
                             self.listen(
                                     std::move(tls),
-                                    max_streams ? std::make_optional<opt::max_streams>(*max_streams)
-                                                : std::nullopt,
+                                    value_option<opt::max_streams>(max_streams),
+                                    duration_option<opt::keep_alive, std::chrono::milliseconds>(
+                                            keep_alive),
                                     std::move(st_open),
                                     std::move(st_data),
                                     std::move(st_close),
@@ -43,8 +46,9 @@ namespace oxen::quic
                         },
                         py::keep_alive<0, 1>(),
                         "tls_creds"_a,
-                        py::kw_only(),
+                        py::kw_only{},
                         "max_streams"_a = nullptr,
+                        "keep_alive"_a = nullptr,
                         "on_stream_open"_a = nullptr,
                         "on_stream_data"_a = nullptr,
                         "on_stream_close"_a = nullptr,
@@ -58,6 +62,7 @@ namespace oxen::quic
                            RemoteAddress remote,
                            std::shared_ptr<TLSCreds> tls,
                            std::optional<int> max_streams,
+                           std::optional<double> keep_alive,
                            std::optional<py::function> f_st_open,
                            std::optional<py::function> f_st_data,
                            std::optional<py::function> f_st_close,
@@ -74,8 +79,9 @@ namespace oxen::quic
                             return self.connect(
                                     std::move(remote),
                                     std::move(tls),
-                                    max_streams ? std::make_optional<opt::max_streams>(*max_streams)
-                                                : std::nullopt,
+                                    value_option<opt::max_streams>(max_streams),
+                                    duration_option<opt::keep_alive, std::chrono::milliseconds>(
+                                            keep_alive),
                                     std::move(st_open),
                                     std::move(st_data),
                                     std::move(st_close),
@@ -86,13 +92,15 @@ namespace oxen::quic
                         py::keep_alive<0, 1>(),
                         "remote"_a,
                         "tls_creds"_a,
-                        py::kw_only(),
+                        py::kw_only{},
                         "max_streams"_a = nullptr,
+                        "keep_alive"_a = nullptr,
                         "on_stream_open"_a = nullptr,
                         "on_stream_data"_a = nullptr,
                         "on_stream_close"_a = nullptr,
                         "on_stream_construct"_a = nullptr,
                         "on_connection"_a = nullptr,
-                        "on_closed"_a = nullptr);
+                        "on_closed"_a = nullptr)
+                /**/;
     }
 }  // namespace oxen::quic

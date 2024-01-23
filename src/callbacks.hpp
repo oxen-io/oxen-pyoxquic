@@ -1,3 +1,8 @@
+#include <pybind11/pytypes.h>
+
+#include <oxen/quic/stream.hpp>
+#include <oxen/quic/datagram.hpp>
+
 #include "utils.hpp"
 
 namespace oxen::quic
